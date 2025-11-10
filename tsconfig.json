@@ -10,11 +10,11 @@
     "noImplicitAny": true,
     "noImplicitOverride": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true
   },
-  "include": ["src", "tests"],
+  "include": ["index.ts", "src", "tests"],
   "exclude": ["node_modules", "dist", "front"]
 }

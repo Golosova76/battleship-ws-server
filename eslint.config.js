@@ -17,7 +17,7 @@ export default [
   },
   // TypeScript files
   {
-    files: ['src/**/*.{ts,js}'],
+    files: ['**/*.{ts,js}'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
