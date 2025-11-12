@@ -1,15 +1,17 @@
-import type {UserRequestData, UserResponseData} from "../models/user.model.js";
-import {MESSAGE_TYPES, type MessageBase, type UpdateWinnersResponseData} from "../models/types.js";
-import type {UserToRoomOneResponseData, UserToRoomRequestData} from "../models/rooms.model.js";
+import type { UserRequestData, UserResponseData } from '../models/user.model.js';
+import type { MESSAGE_TYPES} from '../models/types.js';
+import { type MessageBase, type UpdateWinnersResponseData } from '../models/types.js';
+import type { UserToRoomOneResponseData, UserToRoomRequestData } from '../models/rooms.model.js';
 import type {
-    AttackResponseData,
-    AttackShipsRequestData, FinishResponseData,
-    GameResponseData,
-    GameShipsResponseData, RandomAttackRequestData,
-    ShipsRequestData, TurnResponseData
-} from "../models/game.model.js";
-
-
+  AttackResponseData,
+  AttackShipsRequestData,
+  FinishResponseData,
+  GameResponseData,
+  GameShipsResponseData,
+  RandomAttackRequestData,
+  ShipsRequestData,
+  TurnResponseData,
+} from '../models/game.model.js';
 
 // <-  cmd from frontend
 
@@ -28,9 +30,6 @@ export type AddShipsRequestMessage = MessageBase<typeof MESSAGE_TYPES.ADD_SHIPS,
 export type AttackGameRequestMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackShipsRequestData>;
 
 export type RandomAttackGameRequestMessage = MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, RandomAttackRequestData>;
-
-
-
 
 // -> answer server
 
@@ -53,4 +52,3 @@ export type AttackGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK,
 export type TurnGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.TURN, TurnResponseData>;
 
 export type FinishGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.FINISH, FinishResponseData>;
-
