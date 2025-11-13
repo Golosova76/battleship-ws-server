@@ -21,7 +21,7 @@ export interface UserResponseData {
   errorText: string;
 }
 
-export interface PlayersController {
+export interface PlayersControllerType {
   handlePlayerMessage(
       connectionContext: ConnectionContext,
       clientMessage: MessageBase<MessageType, unknown>

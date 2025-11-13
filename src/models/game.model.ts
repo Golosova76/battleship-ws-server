@@ -60,7 +60,7 @@ export interface FinishResponseData {
   winPlayer: number | string; // id игрока в тек.игр.сессии
 }
 
-export interface GamesController {
+export interface GamesControllerType {
   handleGameMessage(
       connectionContext: ConnectionContext,
       clientMessage: MessageBase<MessageType, unknown>

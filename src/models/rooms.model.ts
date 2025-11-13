@@ -17,7 +17,7 @@ export interface SingleRoomState {
 
 export type UserToRoomOneResponseData = SingleRoomState[];
 
-export interface RoomsController {
+export interface RoomsControllerType {
   handleRoomMessage(
       connectionContext: ConnectionContext,
       clientMessage: MessageBase<MessageType, unknown>

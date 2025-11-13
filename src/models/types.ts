@@ -1,6 +1,6 @@
-import type {PlayersController} from "./user.model.js";
-import type {RoomsController} from "./rooms.model.js";
-import type {GamesController} from "./game.model.js";
+import type { PlayersControllerType} from "./user.model.js";
+import type { RoomsControllerType} from "./rooms.model.js";
+import type { GamesControllerType} from "./game.model.js";
 
 export const MESSAGE_TYPES = {
   REG: 'reg',
@@ -26,7 +26,11 @@ export interface MessageBase<TMessageType extends MessageType, TMessageData> {
   id: 0;
 }
 
+// Базовый тип исходящего сообщения от сервера
 export type AllServerResponseMessage = MessageBase<MessageType, unknown>;
+
+// Базовый тип входящего сообщения от клиента
+export type IncomingClientMessage = MessageBase<MessageType, unknown>;
 
 export interface Winner {
   name: string;
@@ -58,7 +62,7 @@ export interface ResponseMessagePackage {
 }
 
 export interface MessageRouterDependencies {
-  playersController: PlayersController;
-  roomsController: RoomsController;
-  gamesController: GamesController;
+  playersController: PlayersControllerType;
+  roomsController: RoomsControllerType;
+  gamesController: GamesControllerType;
 }

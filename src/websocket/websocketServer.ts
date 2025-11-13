@@ -34,8 +34,7 @@ export function createWebsocketServer(options: WebSocketServerOptions): WebSocke
 
       logInfo(`Message from ${connectionContext.connectionId}: ${receivedText}`);
 
-      // позже:
-      // messageRouter.routeIncomingMessage(receivedText, connectionContext);
+      messageRouter.routeIncomingMessage(receivedText, connectionContext);
     });
 
     websocketClient.on('close', (code, reason: Buffer) => {
