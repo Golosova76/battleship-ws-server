@@ -3,7 +3,7 @@ import { LOG_COMMAND } from '../models/messages-text.model.js';
 
 function createLogRecord(level: LogLevel, message: string): BaseLogRecord {
   return {
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }),
     level,
     message,
   };

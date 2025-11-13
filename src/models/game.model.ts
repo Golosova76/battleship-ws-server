@@ -1,4 +1,5 @@
-import type { AttackStatus } from './types.js';
+import type {AttackStatus, MessageBase, MessageType} from './types.js';
+import type {ConnectionContext} from "./websocket.model.js";
 
 export interface GameResponseData {
   idGame: number | string;
@@ -57,4 +58,11 @@ export interface TurnResponseData {
 
 export interface FinishResponseData {
   winPlayer: number | string; // id игрока в тек.игр.сессии
+}
+
+export interface GamesController {
+  handleGameMessage(
+      connectionContext: ConnectionContext,
+      clientMessage: MessageBase<MessageType, unknown>
+  ): Promise<void> | void;
 }

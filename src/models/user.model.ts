@@ -1,3 +1,6 @@
+import type {ConnectionContext} from "./websocket.model.js";
+import type {MessageBase, MessageType} from "./types.js";
+
 export interface User {
   index: string; // idUser
   name: string;
@@ -17,3 +20,11 @@ export interface UserResponseData {
   error: boolean;
   errorText: string;
 }
+
+export interface PlayersController {
+  handlePlayerMessage(
+      connectionContext: ConnectionContext,
+      clientMessage: MessageBase<MessageType, unknown>
+  ): Promise<void> | void;
+}
+

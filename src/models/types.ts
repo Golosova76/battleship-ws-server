@@ -1,3 +1,7 @@
+import type {PlayersController} from "./user.model.js";
+import type {RoomsController} from "./rooms.model.js";
+import type {GamesController} from "./game.model.js";
+
 export const MESSAGE_TYPES = {
   REG: 'reg',
   UPDATE_WINNERS: 'update_winners',
@@ -22,6 +26,8 @@ export interface MessageBase<TMessageType extends MessageType, TMessageData> {
   id: 0;
 }
 
+export type AllServerResponseMessage = MessageBase<MessageType, unknown>;
+
 export interface Winner {
   name: string;
   wins: number;
@@ -44,4 +50,15 @@ export interface BaseLogRecord {
   timestamp: string;
   level: LogLevel;
   message: string;
+}
+
+export interface ResponseMessagePackage {
+  targetConnectionIds: string[];
+  responseMessage: AllServerResponseMessage;
+}
+
+export interface MessageRouterDependencies {
+  playersController: PlayersController;
+  roomsController: RoomsController;
+  gamesController: GamesController;
 }

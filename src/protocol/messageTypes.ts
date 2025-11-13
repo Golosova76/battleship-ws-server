@@ -16,39 +16,67 @@ import type {
 // <-  cmd from frontend
 
 // // PLAYER
-export type RegRequestMessage = MessageBase<typeof MESSAGE_TYPES.REG, UserRequestData>;
+type RegRequestMessage = MessageBase<typeof MESSAGE_TYPES.REG, UserRequestData>;
 
 // // ROOM
-export type CreateRoomRequestMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, ''>;
+type CreateRoomRequestMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, ''>;
 
-export type AddUserToRoomRequestMessage = MessageBase<typeof MESSAGE_TYPES.ADD_USER_TO_ROOM, UserToRoomRequestData>;
+type AddUserToRoomRequestMessage = MessageBase<typeof MESSAGE_TYPES.ADD_USER_TO_ROOM, UserToRoomRequestData>;
 
 // // SHIP
-export type AddShipsRequestMessage = MessageBase<typeof MESSAGE_TYPES.ADD_SHIPS, ShipsRequestData>;
+type AddShipsRequestMessage = MessageBase<typeof MESSAGE_TYPES.ADD_SHIPS, ShipsRequestData>;
 
 // // GAME
-export type AttackGameRequestMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackShipsRequestData>;
+type AttackGameRequestMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackShipsRequestData>;
 
-export type RandomAttackGameRequestMessage = MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, RandomAttackRequestData>;
+type RandomAttackGameRequestMessage = MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, RandomAttackRequestData>;
 
 // -> answer server
 
 // // PLAYER
-export type RegResponseMessage = MessageBase<typeof MESSAGE_TYPES.REG, UserResponseData>;
+type RegResponseMessage = MessageBase<typeof MESSAGE_TYPES.REG, UserResponseData>;
 
-export type UpdateWinsResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_WINNERS, UpdateWinnersResponseData>;
+type UpdateWinsResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_WINNERS, UpdateWinnersResponseData>;
 
 // // ROOM
-export type CreateGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_GAME, GameResponseData>;
+type CreateGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_GAME, GameResponseData>;
 
-export type UpdateRoomResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_ROOM, UserToRoomOneResponseData>;
+// список комнат, где только один игрок внутри.
+type UpdateRoomResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_ROOM, UserToRoomOneResponseData>;
 
 // // START GAME
-export type StartGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.START_GAME, GameShipsResponseData>;
+type StartGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.START_GAME, GameShipsResponseData>;
 
 // // GAME
-export type AttackGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackResponseData>;
+type AttackGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackResponseData>;
 
-export type TurnGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.TURN, TurnResponseData>;
+type TurnGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.TURN, TurnResponseData>;
 
-export type FinishGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.FINISH, FinishResponseData>;
+type FinishGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.FINISH, FinishResponseData>;
+
+// <- client → server
+export type AllRequestMessage =
+    | RegRequestMessage
+    | CreateRoomRequestMessage
+    | AddUserToRoomRequestMessage
+    | AddShipsRequestMessage
+    | AttackGameRequestMessage
+    | RandomAttackGameRequestMessage;
+
+// -> server → client
+// Player
+export type PersonalResponseMessage = RegResponseMessage;
+
+
+// Room  Two Player
+export type RoomResponseMessage =
+    | CreateGameResponseMessage
+    | StartGameResponseMessage
+    | AttackGameResponseMessage
+    | TurnGameResponseMessage
+    | FinishGameResponseMessage;
+
+// for all after every update (Broadcast)
+export type BroadcastResponseMessage =
+    | UpdateRoomResponseMessage
+    | UpdateWinsResponseMessage;

@@ -1,3 +1,6 @@
+import type {ConnectionContext} from "./websocket.model.js";
+import type {MessageBase, MessageType} from "./types.js";
+
 export interface UserToRoomRequestData {
   indexRoom: string | number;
 }
@@ -13,3 +16,10 @@ export interface SingleRoomState {
 }
 
 export type UserToRoomOneResponseData = SingleRoomState[];
+
+export interface RoomsController {
+  handleRoomMessage(
+      connectionContext: ConnectionContext,
+      clientMessage: MessageBase<MessageType, unknown>
+  ): Promise<void> | void;
+}
