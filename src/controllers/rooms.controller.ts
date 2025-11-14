@@ -5,11 +5,10 @@ import type {
   UserToRoomRequestData,
 } from '../models/rooms.model.js';
 import type { ConnectionContext } from '../models/websocket.model.js';
-import { logCommand, logError } from '../utils/logging.js';
 import { MESSAGE_TYPES, type MessageBase, type MessageType } from '../models/types.js';
 import { sendBroadcastMessage } from '../protocol/messageSender.js';
 import type { RoomsService } from '../services/rooms-service.js';
-import { LOG_COMMAND } from '../models/messages-text.model.js';
+import { logError } from '../utils/logging.js';
 
 export class RoomsController implements RoomsControllerType {
   private readonly roomsService: RoomsService;
@@ -70,15 +69,6 @@ export class RoomsController implements RoomsControllerType {
 
     // Ответ для всех (response for all)
     sendBroadcastMessage(updateRoomResponseMessage);
-
-    // Лог результата команды (как в задании: команда + результат)
-    logCommand(
-      LOG_COMMAND.RESULT_OK(
-        connectionContext.connectionId,
-        MESSAGE_TYPES.UPDATE_ROOM,
-        updateRoomResponseDataJson
-      )
-    );
   }
 
   private handleAddUserToRoom(
@@ -110,15 +100,6 @@ export class RoomsController implements RoomsControllerType {
 
     // Ответ для всех (response for all)
     sendBroadcastMessage(updateRoomResponseMessage);
-
-    // Лог результата команды update_room
-    logCommand(
-      LOG_COMMAND.RESULT_OK(
-        connectionContext.connectionId,
-        MESSAGE_TYPES.UPDATE_ROOM,
-        updateRoomResponseDataJson
-      )
-    );
 
     // Дальше здесь будет "response for the game room":
     // - gamesService.createGameForRoom(serviceResult.targetRoomState)

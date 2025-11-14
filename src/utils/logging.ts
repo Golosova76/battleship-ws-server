@@ -1,5 +1,12 @@
 import { type BaseLogRecord, type LogLevel } from '../models/types.js';
 import { LOG_COMMAND } from '../models/messages-text.model.js';
+import {
+  printCommandErrorSeparator,
+  printCommandOkSeparator,
+  printCommandSeparator,
+  printErrorSeparator,
+  printInfoSeparator,
+} from './randomHelpers.js';
 
 function createLogRecord(level: LogLevel, message: string): BaseLogRecord {
   return {
@@ -20,37 +27,47 @@ function printLog(logRecord: BaseLogRecord): void {
 
 // Универсальные
 export function logInfo(message: string): void {
+  printInfoSeparator();
   printLog(createLogRecord('info', message));
 }
 
 export function logError(messageOrError: string | Error): void {
+  printErrorSeparator();
   const normalizedMessage =
     messageOrError instanceof Error ? `${messageOrError.name}: ${messageOrError.message}` : messageOrError;
   printLog(createLogRecord('error', normalizedMessage));
 }
 
-export function logCommand(message: string): void {
+function logCommandWithoutSeparator(message: string): void {
   printLog(createLogRecord('command', message));
 }
 
+export function logCommand(message: string): void {
+  printCommandSeparator();
+  logCommandWithoutSeparator(message);
+}
+
 // Входящее сообщение
-export function logIncomingCommand(connectionId: string, rawMessage: string): void {
+export function logIncomingCommand(connectionId: string, rawMessageText: string): void {
   try {
-    const parsed: unknown = JSON.parse(rawMessage);
-    const commandType = hasTypeField(parsed) ? parsed.type : 'unknown';
-    logCommand(LOG_COMMAND.INCOMING(connectionId, commandType));
+    const parsedMessage: unknown = JSON.parse(rawMessageText);
+    const commandType = hasTypeField(parsedMessage) ? parsedMessage.type : 'unknown';
+
+    logCommandWithoutSeparator(LOG_COMMAND.INCOMING(connectionId, commandType, rawMessageText));
   } catch {
-    logCommand(LOG_COMMAND.INCOMING_INVALID_JSON(connectionId, rawMessage));
+    logCommandWithoutSeparator(LOG_COMMAND.INCOMING_INVALID_JSON(connectionId, rawMessageText));
   }
 }
 
 export function logCommandResultOk(targetId: string, commandType: string, resultPayload: unknown): void {
+  printCommandOkSeparator();
   const compactResultJson = safeStringify(resultPayload);
-  logCommand(LOG_COMMAND.RESULT_OK(targetId, commandType, compactResultJson));
+  logCommandWithoutSeparator(LOG_COMMAND.RESULT_OK(targetId, commandType, compactResultJson));
 }
 
 export function logCommandResultError(targetId: string, commandType: string, errorMessage: string): void {
-  logCommand(LOG_COMMAND.RESULT_ERROR(targetId, commandType, errorMessage));
+  printCommandErrorSeparator();
+  logCommandWithoutSeparator(LOG_COMMAND.RESULT_ERROR(targetId, commandType, errorMessage));
 }
 
 /* ----------------------------- Вспомогательное ----------------------------- */

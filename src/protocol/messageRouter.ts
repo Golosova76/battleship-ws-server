@@ -9,6 +9,7 @@ import type { RoomsControllerType } from '../models/rooms.model.js';
 import type { GamesControllerType } from '../models/game.model.js';
 import type { ConnectionContext } from '../models/websocket.model.js';
 import { logError, logIncomingCommand } from '../utils/logging.js';
+import { printNewCommandSeparator } from '../utils/randomHelpers.js';
 
 export class MessageRouter {
   private readonly playersController: PlayersControllerType;
@@ -23,6 +24,7 @@ export class MessageRouter {
 
   // Вызывается WebSocket-сервером, когда от клиента приходит строка.
   public async routeIncomingMessage(rawMessageText: string, connectionContext: ConnectionContext): Promise<void> {
+    printNewCommandSeparator();
     logIncomingCommand(connectionContext.connectionId, rawMessageText);
 
     let parsedMessage: unknown;

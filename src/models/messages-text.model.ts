@@ -22,13 +22,13 @@ export const LOG_SYSTEM = {
 } as const;
 
 export const LOG_COMMAND = {
-  INCOMING: (connectionId: string, commandType: string) => `Incoming command from ${connectionId}: ${commandType}`,
+  INCOMING: (connectionId: string, commandType: string, rawJson: string) => `IN [${connectionId}] ${commandType}: ${rawJson}`,
   INCOMING_INVALID_JSON: (connectionId: string, rawPayload: string) =>
-    `Incoming invalid JSON from ${connectionId}: ${rawPayload}`,
+    `IN [${connectionId}] invalid JSON: ${rawPayload}`,
   RESULT_OK: (targetId: string, commandType: string, compactResultJson: string) =>
-    `Result for ${targetId} [${commandType}]: ${compactResultJson}`,
+    `OUT [${targetId}] ${commandType}: ${compactResultJson}`,
   RESULT_ERROR: (targetId: string, commandType: string, errorMessage: string) =>
-    `Result for ${targetId} [${commandType}] ERROR: ${errorMessage}`,
+    `OUT [${targetId}] ${commandType} ERROR: ${errorMessage}`,
 } as const;
 
 export const LOG_REGISTRY = {

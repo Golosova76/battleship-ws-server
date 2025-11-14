@@ -8,8 +8,6 @@ import type { PlayersService } from '../services/players-service.js';
 import type { PersonalResponseMessage } from '../protocol/messageTypes.js';
 import { sendPersonalMessage } from '../protocol/messageSender.js';
 
-import { logCommand } from '../utils/logging.js';
-import { LOG_COMMAND } from '../models/messages-text.model.js';
 
 export class PlayersController implements PlayersControllerType {
   private readonly playersService: PlayersService;
@@ -40,8 +38,6 @@ export class PlayersController implements PlayersControllerType {
           id: 0,
         };
 
-        logCommand(LOG_COMMAND.RESULT_ERROR(connectionContext.connectionId, MESSAGE_TYPES.REG, errorResponseDataJson));
-
         sendPersonalMessage(connectionContext.connectionId, errorServerMessage);
         return;
       }
@@ -66,14 +62,6 @@ export class PlayersController implements PlayersControllerType {
     if (!userResponseData.error) {
       connectionContext.userName = userResponseData.name;
       connectionContext.userIndex = userResponseData.index; // idUser
-    }
-
-    const compactResultJson = JSON.stringify(userResponseData);
-
-    if (userResponseData.error) {
-      logCommand(LOG_COMMAND.RESULT_ERROR(connectionContext.connectionId, MESSAGE_TYPES.REG, compactResultJson));
-    } else {
-      logCommand(LOG_COMMAND.RESULT_OK(connectionContext.connectionId, MESSAGE_TYPES.REG, compactResultJson));
     }
 
     const userResponseDataJson: string = JSON.stringify(userResponseData);
