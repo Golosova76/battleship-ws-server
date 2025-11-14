@@ -1,5 +1,5 @@
-import type {ConnectionContext} from "./websocket.model.js";
-import type {MessageBase, MessageType} from "./types.js";
+import type { ConnectionContext } from './websocket.model.js';
+import type { MessageBase, MessageType } from './types.js';
 
 export interface User {
   index: string; // idUser
@@ -23,8 +23,7 @@ export interface UserResponseData {
 
 export interface PlayersControllerType {
   handlePlayerMessage(
-      connectionContext: ConnectionContext,
-      clientMessage: MessageBase<MessageType, unknown>
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<MessageType, unknown>
   ): Promise<void> | void;
 }
-

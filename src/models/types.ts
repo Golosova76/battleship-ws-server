@@ -1,6 +1,6 @@
-import type { PlayersControllerType} from "./user.model.js";
-import type { RoomsControllerType} from "./rooms.model.js";
-import type { GamesControllerType} from "./game.model.js";
+import type { PlayersControllerType } from './user.model.js';
+import type { RoomsControllerType } from './rooms.model.js';
+import type { GamesControllerType } from './game.model.js';
 
 export const MESSAGE_TYPES = {
   REG: 'reg',

@@ -4,6 +4,15 @@ import { closeAllConnections, registerConnection, unregisterConnection } from '.
 import { logError, logInfo } from '../utils/logging.js';
 import { promisify } from 'node:util';
 import { LOG_WS } from '../models/messages-text.model.js';
+import { MessageRouter } from '../protocol/messageRouter.js';
+import { roomsController } from '../controllers/rooms.controller.js';
+import { gamesController } from '../controllers/games.controller.js';
+import { PlayersController } from '../controllers/players.controller.js';
+import { PlayersService } from '../services/players-service.js';
+
+const playersService = new PlayersService();
+
+const playersController = new PlayersController(playersService);
 
 function rawDataToString(data: RawData): string {
   if (Buffer.isBuffer(data)) {
@@ -29,12 +38,21 @@ export function createWebsocketServer(options: WebSocketServerOptions): WebSocke
 
     logInfo(LOG_WS.NEW_CONNECTION(connectionContext.connectionId));
 
-    websocketClient.on('message', (receivedData) => {
+    websocketClient.on('message', async (receivedData: RawData) => {
       const receivedText = rawDataToString(receivedData);
 
       logInfo(`Message from ${connectionContext.connectionId}: ${receivedText}`);
 
-      messageRouter.routeIncomingMessage(receivedText, connectionContext);
+      const messageRouter = new MessageRouter({
+        playersController,
+        roomsController,
+        gamesController,
+      });
+      try {
+        await messageRouter.routeIncomingMessage(receivedText, connectionContext);
+      } catch (error) {
+        logError(`Unhandled error while routing message from ${connectionContext.connectionId}: ${String(error)}`);
+      }
     });
 
     websocketClient.on('close', (code, reason: Buffer) => {

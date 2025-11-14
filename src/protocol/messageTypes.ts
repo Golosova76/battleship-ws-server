@@ -1,5 +1,5 @@
 import type { UserRequestData, UserResponseData } from '../models/user.model.js';
-import type { MESSAGE_TYPES} from '../models/types.js';
+import type { MESSAGE_TYPES } from '../models/types.js';
 import { type MessageBase, type UpdateWinnersResponseData } from '../models/types.js';
 import type { UserToRoomOneResponseData, UserToRoomRequestData } from '../models/rooms.model.js';
 import type {
@@ -34,7 +34,7 @@ type RandomAttackGameRequestMessage = MessageBase<typeof MESSAGE_TYPES.RANDOM_AT
 // -> answer server
 
 // // PLAYER
-type RegResponseMessage = MessageBase<typeof MESSAGE_TYPES.REG, UserResponseData>;
+type RegResponseMessage = MessageBase<typeof MESSAGE_TYPES.REG, string>;
 
 type UpdateWinsResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_WINNERS, UpdateWinnersResponseData>;
 
@@ -56,27 +56,24 @@ type FinishGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.FINISH, Finish
 
 // <- client → server
 export type AllRequestMessage =
-    | RegRequestMessage
-    | CreateRoomRequestMessage
-    | AddUserToRoomRequestMessage
-    | AddShipsRequestMessage
-    | AttackGameRequestMessage
-    | RandomAttackGameRequestMessage;
+  | RegRequestMessage
+  | CreateRoomRequestMessage
+  | AddUserToRoomRequestMessage
+  | AddShipsRequestMessage
+  | AttackGameRequestMessage
+  | RandomAttackGameRequestMessage;
 
 // -> server → client
 // Player
 export type PersonalResponseMessage = RegResponseMessage;
 
-
 // Room  Two Player
 export type RoomResponseMessage =
-    | CreateGameResponseMessage
-    | StartGameResponseMessage
-    | AttackGameResponseMessage
-    | TurnGameResponseMessage
-    | FinishGameResponseMessage;
+  | CreateGameResponseMessage
+  | StartGameResponseMessage
+  | AttackGameResponseMessage
+  | TurnGameResponseMessage
+  | FinishGameResponseMessage;
 
 // for all after every update (Broadcast)
-export type BroadcastResponseMessage =
-    | UpdateRoomResponseMessage
-    | UpdateWinsResponseMessage;
+export type BroadcastResponseMessage = UpdateRoomResponseMessage | UpdateWinsResponseMessage;

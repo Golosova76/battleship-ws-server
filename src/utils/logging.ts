@@ -33,24 +33,22 @@ export function logCommand(message: string): void {
   printLog(createLogRecord('command', message));
 }
 
-// Входящее сообщение (строго выводим "команду")
+// Входящее сообщение
 export function logIncomingCommand(connectionId: string, rawMessage: string): void {
   try {
-    const parsed = JSON.parse(rawMessage);
-    const commandType: string = typeof parsed?.type === 'string' ? parsed.type : 'unknown';
+    const parsed: unknown = JSON.parse(rawMessage);
+    const commandType = hasTypeField(parsed) ? parsed.type : 'unknown';
     logCommand(LOG_COMMAND.INCOMING(connectionId, commandType));
   } catch {
     logCommand(LOG_COMMAND.INCOMING_INVALID_JSON(connectionId, rawMessage));
   }
 }
 
-// Результат обработки команды (успех)
 export function logCommandResultOk(targetId: string, commandType: string, resultPayload: unknown): void {
   const compactResultJson = safeStringify(resultPayload);
   logCommand(LOG_COMMAND.RESULT_OK(targetId, commandType, compactResultJson));
 }
 
-// Результат обработки команды (ошибка)
 export function logCommandResultError(targetId: string, commandType: string, errorMessage: string): void {
   logCommand(LOG_COMMAND.RESULT_ERROR(targetId, commandType, errorMessage));
 }
@@ -62,4 +60,13 @@ function safeStringify(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function hasTypeField(value: unknown): value is { type: string } {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.type === 'string';
 }
