@@ -5,14 +5,17 @@ import { logError, logInfo } from '../utils/logging.js';
 import { promisify } from 'node:util';
 import { LOG_WS } from '../models/messages-text.model.js';
 import { MessageRouter } from '../protocol/messageRouter.js';
-import { roomsController } from '../controllers/rooms.controller.js';
+import { RoomsController } from '../controllers/rooms.controller.js';
 import { gamesController } from '../controllers/games.controller.js';
 import { PlayersController } from '../controllers/players.controller.js';
 import { PlayersService } from '../services/players-service.js';
+import { RoomsService } from '../services/rooms-service.js';
 
 const playersService = new PlayersService();
+const roomsService = new RoomsService();
 
 const playersController = new PlayersController(playersService);
+const roomsController = new RoomsController(roomsService);
 
 function rawDataToString(data: RawData): string {
   if (Buffer.isBuffer(data)) {

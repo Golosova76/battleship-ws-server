@@ -62,6 +62,12 @@ export class PlayersController implements PlayersControllerType {
   ): Promise<void> {
     const userResponseData: UserResponseData = this.playersService.registerOrLogin(userRequestData);
 
+    // сохраняем пользователя в ConnectionContext
+    if (!userResponseData.error) {
+      connectionContext.userName = userResponseData.name;
+      connectionContext.userIndex = userResponseData.index; // idUser
+    }
+
     const compactResultJson = JSON.stringify(userResponseData);
 
     if (userResponseData.error) {

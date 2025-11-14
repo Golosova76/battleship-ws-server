@@ -23,3 +23,9 @@ export interface RoomsControllerType {
     clientMessage: MessageBase<MessageType, unknown>
   ): Promise<void> | void;
 }
+
+export interface AddUserToRoomServiceResult {
+  updatedRoomsForBroadcast: UserToRoomOneResponseData;
+  targetRoomState: SingleRoomState | null;
+}
+

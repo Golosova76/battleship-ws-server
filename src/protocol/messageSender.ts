@@ -8,7 +8,6 @@ function sendMessageToConnectionIds(responseMessagePackage: ResponseMessagePacka
 
   const serializedMessage = JSON.stringify(responseMessage);
   const commandType = responseMessage.type;
-  const resultData = responseMessage.data;
 
   for (const targetConnectionId of targetConnectionIds) {
     const websocketClient = getWsConnectionId(targetConnectionId);
@@ -25,7 +24,7 @@ function sendMessageToConnectionIds(responseMessagePackage: ResponseMessagePacka
 
     try {
       websocketClient.send(serializedMessage);
-      logCommandResultOk(targetConnectionId, commandType, resultData);
+      logCommandResultOk(targetConnectionId, commandType, serializedMessage);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logCommandResultError(targetConnectionId, commandType, errorMessage);

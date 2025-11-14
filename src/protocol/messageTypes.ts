@@ -1,12 +1,11 @@
-import type { UserRequestData, UserResponseData } from '../models/user.model.js';
+import type { UserRequestData } from '../models/user.model.js';
 import type { MESSAGE_TYPES } from '../models/types.js';
 import { type MessageBase, type UpdateWinnersResponseData } from '../models/types.js';
-import type { UserToRoomOneResponseData, UserToRoomRequestData } from '../models/rooms.model.js';
+import type { UserToRoomRequestData } from '../models/rooms.model.js';
 import type {
   AttackResponseData,
   AttackShipsRequestData,
   FinishResponseData,
-  GameResponseData,
   GameShipsResponseData,
   RandomAttackRequestData,
   ShipsRequestData,
@@ -19,7 +18,8 @@ import type {
 type RegRequestMessage = MessageBase<typeof MESSAGE_TYPES.REG, UserRequestData>;
 
 // // ROOM
-type CreateRoomRequestMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, ''>;
+export type CreateRoomRequestData = '';
+type CreateRoomRequestMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, CreateRoomRequestData>;
 
 type AddUserToRoomRequestMessage = MessageBase<typeof MESSAGE_TYPES.ADD_USER_TO_ROOM, UserToRoomRequestData>;
 
@@ -39,10 +39,10 @@ type RegResponseMessage = MessageBase<typeof MESSAGE_TYPES.REG, string>;
 type UpdateWinsResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_WINNERS, UpdateWinnersResponseData>;
 
 // // ROOM
-type CreateGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_GAME, GameResponseData>;
+type CreateGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_GAME, string>;
 
 // список комнат, где только один игрок внутри.
-type UpdateRoomResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_ROOM, UserToRoomOneResponseData>;
+type UpdateRoomResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_ROOM, string>;
 
 // // START GAME
 type StartGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.START_GAME, GameShipsResponseData>;
