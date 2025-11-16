@@ -63,7 +63,6 @@ export function closeAllConnections(): void {
   for (const [websocketClient, context] of wsConnectionContext.entries()) {
     try {
       websocketClient.close(1001, 'Server shutting down');
-      logInfo(LOG_REGISTRY.CONNECTION_CLOSED(context.connectionId));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       logError(LOG_REGISTRY.CONNECTION_CLOSE_ERROR(context.connectionId, message));

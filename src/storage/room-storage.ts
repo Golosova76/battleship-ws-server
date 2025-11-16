@@ -1,24 +1,20 @@
-import type { RoomUsers, SingleRoomState } from '../models/rooms.model.js';
+import type { RoomId, RoomUsers, SingleRoomState } from '../models/rooms.model.js';
 
-/**
- * Внутреннее in-memory хранилище комнат.
- * Ключ: идентификатор комнаты (roomId).
- * Значение: состояние комнаты.
- */
-const roomsStorage = new Map<string | number, SingleRoomState>();
+const roomsStorage = new Map<RoomId, SingleRoomState>();
 
-export function createRoomInStorage(roomIdentifier: string | number, initialRoomUser: RoomUsers): SingleRoomState {
+export function createRoomInStorage(roomId: RoomId, initialRoomUser: RoomUsers, initialConnectionId: string): SingleRoomState {
   const roomState: SingleRoomState = {
-    roomId: roomIdentifier,
+    roomId,
     roomUsers: [initialRoomUser],
+    connections: [initialConnectionId], // один игрок — одно соединение
   };
 
-  roomsStorage.set(roomIdentifier, roomState);
+  roomsStorage.set(roomId, roomState);
   return roomState;
 }
 
-export function getRoomFromStorage(roomIdentifier: string | number): SingleRoomState | undefined {
-  return roomsStorage.get(roomIdentifier);
+export function getRoomFromStorage(roomId: RoomId): SingleRoomState | undefined {
+  return roomsStorage.get(roomId);
 }
 
 export function updateRoomInStorage(updatedRoomState: SingleRoomState): void {
@@ -28,8 +24,8 @@ export function updateRoomInStorage(updatedRoomState: SingleRoomState): void {
 /**
  * Удалить комнату из хранилища .
  */
-export function deleteRoomFromStorage(roomIdentifier: string | number): void {
-  roomsStorage.delete(roomIdentifier);
+export function deleteRoomFromStorage(roomId: RoomId): void {
+  roomsStorage.delete(roomId);
 }
 
 /**

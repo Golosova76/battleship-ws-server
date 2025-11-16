@@ -9,7 +9,7 @@ import type { RoomsControllerType } from '../models/rooms.model.js';
 import type { GamesControllerType } from '../models/game.model.js';
 import type { ConnectionContext } from '../models/websocket.model.js';
 import { logError, logIncomingCommand } from '../utils/logging.js';
-import { printNewCommandSeparator } from '../utils/randomHelpers.js';
+import { printNewCommandSeparator } from '../utils/utils.js';
 
 export class MessageRouter {
   private readonly playersController: PlayersControllerType;

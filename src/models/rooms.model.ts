@@ -1,8 +1,10 @@
 import type { ConnectionContext } from './websocket.model.js';
 import type { MessageBase, MessageType } from './types.js';
 
+export type RoomId = string | number;
+
 export interface UserToRoomRequestData {
-  indexRoom: string | number;
+  indexRoom: RoomId;
 }
 
 export interface RoomUsers {
@@ -11,8 +13,9 @@ export interface RoomUsers {
 }
 
 export interface SingleRoomState {
-  roomId: number | string;
+  roomId: RoomId;
   roomUsers: RoomUsers[];
+  connections: string[]; // два connectionId, соответствуют двумя игрокам
 }
 
 export type UserToRoomOneResponseData = SingleRoomState[];

@@ -1,14 +1,23 @@
 import type { AttackStatus, MessageBase, MessageType } from './types.js';
 import type { ConnectionContext } from './websocket.model.js';
+import type { PlayerInGameId } from './user.model.js';
+import type { RoomId } from './rooms.model.js';
 
+export type GameId = string | number;
+
+// 'create_game'
 export interface GameResponseData {
-  idGame: number | string;
-  idPlayer: number | string; //id игрока в игровой сессии
+  idGame: GameId;
+  idPlayer: PlayerInGameId; //id игрока в игровой сессии
 }
 
 export interface Position {
   x: number;
   y: number;
+}
+
+export interface BoardCell extends Position {
+  status: AttackStatus;
 }
 
 export type ShipType = 'small' | 'medium' | 'large' | 'huge';
@@ -20,44 +29,49 @@ export interface Ship {
   type: ShipType;
 }
 
+// ЭТО ВСЕ И ЕСТЬ data!!!! 'add_ships'
 export interface ShipsRequestData {
-  gameId: number | string;
+  gameId: GameId;
   ships: Ship[];
-  indexPlayer: number | string; // id игрока в тек.игр.сессии
+  indexPlayer: PlayerInGameId; // id игрока в тек.игр.сессии
 }
 
+// 'start_game'
 export interface GameShipsResponseData {
   ships: Ship[]; // корабли игрока
-  currentPlayerIndex: number | string; // id игрока в тек.игр.сессии, кот отправил свои корабли
+  currentPlayerIndex: PlayerInGameId; // id игрока в тек.игр.сессии, кот отправил свои корабли
 }
 
 // GAME
-// // Attack
+// 'attack'
 export interface AttackShipsRequestData {
   gameId: number | string;
   x: number;
   y: number;
-  indexPlayer: number | string; // id игрока в тек.игр.сессии
+  indexPlayer: PlayerInGameId; // id игрока в тек.игр.сессии
 }
 
-// // Attack feedback
+// 'attack'
 export interface AttackResponseData {
   position: Position;
-  currentPlayer: number | string; // id игрока в тек.игр.сессии
+  currentPlayer: PlayerInGameId; // id игрока в тек.игр.сессии
   status: AttackStatus;
 }
 
+// 'randomAttack'
 export interface RandomAttackRequestData {
   gameId: number | string;
-  indexPlayer: number | string; // id игрока в тек.игр.сессии
+  indexPlayer: PlayerInGameId; // id игрока в тек.игр.сессии
 }
 
+// turn
 export interface TurnResponseData {
-  currentPlayer: number | string; // id игрока в тек.игр.сессии
+  currentPlayer: PlayerInGameId; // id игрока в тек.игр.сессии
 }
 
+// 'finish'
 export interface FinishResponseData {
-  winPlayer: number | string; // id игрока в тек.игр.сессии
+  winPlayer: PlayerInGameId; // id игрока в тек.игр.сессии
 }
 
 export interface GamesControllerType {
@@ -65,4 +79,81 @@ export interface GamesControllerType {
     connectionContext: ConnectionContext,
     clientMessage: MessageBase<MessageType, unknown>
   ): Promise<void> | void;
+}
+
+/** Состояние игрока в рамках конкретной игры */
+export interface GamePlayerState {
+  gamePlayerId: PlayerInGameId;
+  userId: string | number;
+  connectionId: string;
+  ships: Ship[];
+  board: {
+    cells: BoardCell[];
+  };
+}
+
+/** Полное состояние игры */
+export interface GameState {
+  gameId: GameId;
+  roomId: RoomId;
+  players: GamePlayerState[];
+  currentPlayerId: PlayerInGameId | null;
+  isFinished: boolean;
+  winnerPlayerId: PlayerInGameId | null;
+}
+
+export interface GamePlayerCreationData {
+  gamePlayerId: PlayerInGameId;
+  userId: string | number;
+  connectionId: string;
+}
+
+export interface CreateGameStateParams {
+  gameId: GameId;
+  roomId: RoomId;
+  players: GamePlayerCreationData[];
+  firstPlayerId: PlayerInGameId; // один из двух gamePlayerId, кто ходит первым
+}
+
+export interface AttackLogicResult {
+  status: AttackStatus; // 'miss' | 'shot' | 'killed'
+  isGameOver: boolean;
+  killedShipAroundCells: Position[];
+}
+
+
+export interface AttackProcessingResult {
+  gameId: GameId;
+  targetConnectionIds: string[];
+  attackResponseData: AttackResponseData;
+  additionalMissCells: Position[];
+  turnResponseData: TurnResponseData;
+  finishResponseData?: FinishResponseData;
+}
+
+export interface AttackProcessingParams {
+  gameId: GameId;
+  attackerPlayerId: PlayerInGameId;
+  position: Position;
+}
+
+export interface ShipsPlacementResult {
+  gameId: GameId;
+  startGameForPlayers: {
+    targetConnectionId: string;
+    responseData: GameShipsResponseData;
+  }[];
+  initialTurnResponseData: TurnResponseData;
+}
+
+// для function createGameForRoom
+export interface CreateGameForRoomParams {
+  gameId: GameId;
+  roomId: RoomId;
+  players: {
+    gamePlayerId: PlayerInGameId;
+    userId: string | number;
+    connectionId: string;
+  }[];
+  firstPlayerId: PlayerInGameId;
 }

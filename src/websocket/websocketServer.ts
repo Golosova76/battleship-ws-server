@@ -6,16 +6,19 @@ import { promisify } from 'node:util';
 import { LOG_WS } from '../models/messages-text.model.js';
 import { MessageRouter } from '../protocol/messageRouter.js';
 import { RoomsController } from '../controllers/rooms.controller.js';
-import { gamesController } from '../controllers/games.controller.js';
+import { GamesController } from '../controllers/games.controller.js';
 import { PlayersController } from '../controllers/players.controller.js';
 import { PlayersService } from '../services/players-service.js';
 import { RoomsService } from '../services/rooms-service.js';
+import { GamesService } from '../services/games-service.js';
 
 const playersService = new PlayersService();
 const roomsService = new RoomsService();
+const gamesService = new GamesService();
 
 const playersController = new PlayersController(playersService);
-const roomsController = new RoomsController(roomsService);
+const roomsController = new RoomsController(roomsService, gamesService);
+const gamesController = new GamesController(gamesService);
 
 function rawDataToString(data: RawData): string {
   if (Buffer.isBuffer(data)) {

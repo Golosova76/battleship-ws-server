@@ -6,7 +6,7 @@ import {
   printCommandSeparator,
   printErrorSeparator,
   printInfoSeparator,
-} from './randomHelpers.js';
+} from './utils.js';
 
 function createLogRecord(level: LogLevel, message: string): BaseLogRecord {
   return {

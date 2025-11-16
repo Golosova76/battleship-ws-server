@@ -6,21 +6,24 @@ import type {
 } from '../models/rooms.model.js';
 import type { ConnectionContext } from '../models/websocket.model.js';
 import { MESSAGE_TYPES, type MessageBase, type MessageType } from '../models/types.js';
-import { sendBroadcastMessage } from '../protocol/messageSender.js';
+import { sendBroadcastMessage, sendRoomMessage } from '../protocol/messageSender.js';
 import type { RoomsService } from '../services/rooms-service.js';
 import { logError } from '../utils/logging.js';
+import type { GamesService } from '../services/games-service.js';
+import { generateGameId, generatePlayerIdGame } from '../utils/id-generator.js';
+import type { PlayerInGameId } from '../models/user.model.js';
+import type { CreateGameStateParams, GameId, GamePlayerCreationData, GameResponseData } from '../models/game.model.js';
 
 export class RoomsController implements RoomsControllerType {
   private readonly roomsService: RoomsService;
+  private readonly gamesService: GamesService;
 
-  constructor(roomsService: RoomsService) {
+  constructor(roomsService: RoomsService, gamesService: GamesService) {
     this.roomsService = roomsService;
+    this.gamesService = gamesService;
   }
 
-  public handleRoomMessage(
-    connectionContext: ConnectionContext,
-    clientMessage: MessageBase<MessageType, unknown>
-  ): void {
+  public handleRoomMessage(connectionContext: ConnectionContext, clientMessage: MessageBase<MessageType, unknown>): void {
     switch (clientMessage.type) {
       case MESSAGE_TYPES.CREATE_ROOM: {
         this.handleCreateRoom(
@@ -47,16 +50,13 @@ export class RoomsController implements RoomsControllerType {
 
   // --------- приватные хендлеры ---------
 
-  private handleCreateRoom(
-    connectionContext: ConnectionContext,
-    clientMessage: MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, unknown>
-  ): void {
+  private handleCreateRoom(connectionContext: ConnectionContext, clientMessage: MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, unknown>): void {
     const roomUser = this.extractRoomUserFromConnectionContext(connectionContext);
     if (!roomUser) {
       return;
     }
 
-    const { roomsForBroadcast } = this.roomsService.createRoomForUser(roomUser);
+    const { roomsForBroadcast } = this.roomsService.createRoomForUser(roomUser, connectionContext.connectionId);
 
     const updateRoomResponseData: UserToRoomOneResponseData = roomsForBroadcast;
     const updateRoomResponseDataJson: string = JSON.stringify(updateRoomResponseData);
@@ -71,10 +71,7 @@ export class RoomsController implements RoomsControllerType {
     sendBroadcastMessage(updateRoomResponseMessage);
   }
 
-  private handleAddUserToRoom(
-    connectionContext: ConnectionContext,
-    clientMessage: MessageBase<typeof MESSAGE_TYPES.ADD_USER_TO_ROOM, unknown>
-  ): void {
+  private handleAddUserToRoom(connectionContext: ConnectionContext, clientMessage: MessageBase<typeof MESSAGE_TYPES.ADD_USER_TO_ROOM, unknown>): void {
     const roomUser = this.extractRoomUserFromConnectionContext(connectionContext);
     if (!roomUser) {
       return;
@@ -87,7 +84,7 @@ export class RoomsController implements RoomsControllerType {
       return;
     }
 
-    const serviceResult = this.roomsService.addUserToRoom(parsedRequestData, roomUser);
+    const serviceResult = this.roomsService.addUserToRoom(parsedRequestData, roomUser, connectionContext.connectionId);
 
     const updateRoomResponseData: UserToRoomOneResponseData = serviceResult.updatedRoomsForBroadcast;
     const updateRoomResponseDataJson: string = JSON.stringify(updateRoomResponseData);
@@ -101,9 +98,61 @@ export class RoomsController implements RoomsControllerType {
     // Ответ для всех (response for all)
     sendBroadcastMessage(updateRoomResponseMessage);
 
-    // Дальше здесь будет "response for the game room":
-    // - gamesService.createGameForRoom(serviceResult.targetRoomState)
-    // - генерация idGame, idPlayer и отправка create_game двум игрокам комнаты
+
+    // 2. Если targetRoomState пустой — игры не создаём
+    if (!serviceResult.targetRoomState) {
+      return;
+    }
+
+    const roomState = serviceResult.targetRoomState;
+
+    const generatedGameId: GameId = generateGameId();
+
+    const playersCreationData: GamePlayerCreationData[] = roomState.roomUsers.map((roomUser, index) => {
+      const connectionId = roomState.connections[index];
+      if (!connectionId) {
+        logError(
+          `Missing connectionId for room "${String(roomState.roomId)}" at position ${index}`
+        );
+      }
+
+      const creationData: GamePlayerCreationData = {
+        gamePlayerId: generatePlayerIdGame(),
+        userId: roomUser.index,
+        connectionId: connectionId ?? '',
+      };
+
+      return creationData;
+    });
+
+    const firstPlayerId: PlayerInGameId = playersCreationData[0].gamePlayerId;
+
+    const createGameParams: CreateGameStateParams = {
+      gameId: generatedGameId,
+      roomId: roomState.roomId,
+      players: playersCreationData,
+      firstPlayerId,
+    };
+
+    const createdGameState = this.gamesService.createGameForRoom(createGameParams);
+
+    // 5. Рассылаем обоим игрокам личные ответы create_game
+    for (const playerState of createdGameState.players) {
+      const responseData: GameResponseData = {
+        idGame: createdGameState.gameId,
+        idPlayer: playerState.gamePlayerId, // 0 или 1 как idPlayer
+      };
+
+      const responseDataJson: string = JSON.stringify(responseData);
+
+      const responseMessage: MessageBase<typeof MESSAGE_TYPES.CREATE_GAME, string> = {
+        type: MESSAGE_TYPES.CREATE_GAME,
+        data: responseDataJson,
+        id: clientMessage.id ?? 0,
+      };
+
+      sendRoomMessage([playerState.connectionId], responseMessage);
+    }
   }
 
   // --------- хелперы ---------
