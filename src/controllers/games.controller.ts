@@ -1,12 +1,9 @@
 import type {
   AttackResponseData,
   AttackShipsRequestData,
-  FinishResponseData,
   GamesControllerType,
-  GameShipsResponseData,
   RandomAttackRequestData,
   ShipsRequestData,
-  TurnResponseData,
 } from '../models/game.model.js';
 import type { GamesService } from '../services/games-service.js';
 import type { ConnectionContext } from '../models/websocket.model.js';
@@ -80,11 +77,13 @@ export class GamesController implements GamesControllerType {
       return;
     }
 
+
     // start_game — каждому игроку персонально
     for (const startGameMessage of placementResult.startGameForPlayers) {
-      const responseMessage: MessageBase<typeof MESSAGE_TYPES.START_GAME, GameShipsResponseData> = {
+      const startGameResponseDataJson: string = JSON.stringify(startGameMessage.responseData);
+      const responseMessage: MessageBase<typeof MESSAGE_TYPES.START_GAME, string> = {
         type: MESSAGE_TYPES.START_GAME,
-        data: startGameMessage.responseData,
+        data: startGameResponseDataJson,
         id: clientMessage.id ?? 0,
       };
 
@@ -95,9 +94,11 @@ export class GamesController implements GamesControllerType {
     // turn — обоим игрокам в комнате
     const roomConnectionIds = getGameRoomConnectionIds(placementResult.gameId);
 
-    const turnResponse: MessageBase<typeof MESSAGE_TYPES.TURN, TurnResponseData> = {
+    const turnResponseDataJson: string = JSON.stringify(placementResult.initialTurnResponseData);
+
+    const turnResponse: MessageBase<typeof MESSAGE_TYPES.TURN, string> = {
       type: MESSAGE_TYPES.TURN,
-      data: placementResult.initialTurnResponseData,
+      data: turnResponseDataJson,
       id: clientMessage.id ?? 0,
     };
 
@@ -127,9 +128,11 @@ export class GamesController implements GamesControllerType {
     });
 
     // основной выстрел
-    const attackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackResponseData> = {
+    const attackResponseDataJson: string = JSON.stringify(attackResult.attackResponseData);
+
+    const attackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, string> = {
       type: MESSAGE_TYPES.ATTACK,
-      data: attackResult.attackResponseData,
+      data: attackResponseDataJson,
       id: clientMessage.id ?? 0,
     };
 
@@ -144,9 +147,11 @@ export class GamesController implements GamesControllerType {
           status: 'miss',
         };
 
-        const additionalAttackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackResponseData> = {
+        const additionalAttackDataJson: string = JSON.stringify(additionalAttackData);
+
+        const additionalAttackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, string> = {
           type: MESSAGE_TYPES.ATTACK,
-          data: additionalAttackData,
+          data: additionalAttackDataJson,
           id: clientMessage.id ?? 0,
         };
 
@@ -155,9 +160,11 @@ export class GamesController implements GamesControllerType {
     }
 
     // ход
-    const turnResponse: MessageBase<typeof MESSAGE_TYPES.TURN, TurnResponseData> = {
+    const turnResponseDataJson: string = JSON.stringify(attackResult.turnResponseData);
+
+    const turnResponse: MessageBase<typeof MESSAGE_TYPES.TURN, string> = {
       type: MESSAGE_TYPES.TURN,
-      data: attackResult.turnResponseData,
+      data: turnResponseDataJson,
       id: clientMessage.id ?? 0,
     };
 
@@ -165,9 +172,10 @@ export class GamesController implements GamesControllerType {
 
     // завершение игры
     if (attackResult.finishResponseData) {
-      const finishResponse: MessageBase<typeof MESSAGE_TYPES.FINISH, FinishResponseData> = {
+      const finishResponseDataJson: string = JSON.stringify(attackResult.finishResponseData);
+      const finishResponse: MessageBase<typeof MESSAGE_TYPES.FINISH, string> = {
         type: MESSAGE_TYPES.FINISH,
-        data: attackResult.finishResponseData,
+        data: finishResponseDataJson,
         id: clientMessage.id ?? 0,
       };
 
@@ -193,9 +201,11 @@ export class GamesController implements GamesControllerType {
     });
 
     // основной выстрел
-    const attackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackResponseData> = {
+    const attackResponseDataJson: string = JSON.stringify(attackResult.attackResponseData);
+
+    const attackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, string> = {
       type: MESSAGE_TYPES.ATTACK,
-      data: attackResult.attackResponseData,
+      data: attackResponseDataJson,
       id: clientMessage.id ?? 0,
     };
 
@@ -210,9 +220,11 @@ export class GamesController implements GamesControllerType {
           status: 'miss',
         };
 
-        const additionalAttackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackResponseData> = {
+        const additionalAttackDataJson: string = JSON.stringify(additionalAttackData);
+
+        const additionalAttackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, string> = {
           type: MESSAGE_TYPES.ATTACK,
-          data: additionalAttackData,
+          data: additionalAttackDataJson,
           id: clientMessage.id ?? 0,
         };
 
@@ -221,9 +233,11 @@ export class GamesController implements GamesControllerType {
     }
 
     // ход
-    const turnResponse: MessageBase<typeof MESSAGE_TYPES.TURN, TurnResponseData> = {
+    const turnResponseDataJson: string = JSON.stringify(attackResult.turnResponseData);
+
+    const turnResponse: MessageBase<typeof MESSAGE_TYPES.TURN, string> = {
       type: MESSAGE_TYPES.TURN,
-      data: attackResult.turnResponseData,
+      data: turnResponseDataJson,
       id: clientMessage.id ?? 0,
     };
 
@@ -231,9 +245,11 @@ export class GamesController implements GamesControllerType {
 
     // завершение игры
     if (attackResult.finishResponseData) {
-      const finishResponse: MessageBase<typeof MESSAGE_TYPES.FINISH, FinishResponseData> = {
+      const finishResponseDataJson: string = JSON.stringify(attackResult.finishResponseData);
+
+      const finishResponse: MessageBase<typeof MESSAGE_TYPES.FINISH, string> = {
         type: MESSAGE_TYPES.FINISH,
-        data: attackResult.finishResponseData,
+        data: finishResponseDataJson,
         id: clientMessage.id ?? 0,
       };
 

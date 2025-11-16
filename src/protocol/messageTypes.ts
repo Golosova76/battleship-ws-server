@@ -45,14 +45,14 @@ type CreateGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.CREATE_GAME, s
 type UpdateRoomResponseMessage = MessageBase<typeof MESSAGE_TYPES.UPDATE_ROOM, string>;
 
 
-type StartGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.START_GAME, GameShipsResponseData>;
+type StartGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.START_GAME, string>;
 
 
-type AttackGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK, AttackResponseData>;
+type AttackGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.ATTACK, string>;
 
-type TurnGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.TURN, TurnResponseData>;
+type TurnGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.TURN, string>;
 
-type FinishGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.FINISH, FinishResponseData>;
+type FinishGameResponseMessage = MessageBase<typeof MESSAGE_TYPES.FINISH, string>;
 
 
 // <- client → server
