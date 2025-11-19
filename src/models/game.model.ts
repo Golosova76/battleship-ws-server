@@ -79,8 +79,8 @@ export type SinglePlayRequestData = unknown;
 
 export interface GamesControllerType {
   handleGameMessage(
-    _connectionContext: ConnectionContext,
-    _clientMessage: MessageBase<MessageType, unknown>
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<MessageType, unknown>
   ): Promise<void> | void;
 }
 
