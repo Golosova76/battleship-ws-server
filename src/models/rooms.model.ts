@@ -31,4 +31,3 @@ export interface AddUserToRoomServiceResult {
   updatedRoomsForBroadcast: UserToRoomOneResponseData;
   targetRoomState: SingleRoomState | null;
 }
-

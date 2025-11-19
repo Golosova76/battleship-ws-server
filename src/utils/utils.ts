@@ -21,6 +21,3 @@ export function printCommandOkSeparator(): void {
 export function printCommandErrorSeparator(): void {
   console.log('\n────────── COMMAND ERROR──────────');
 }
-
-
-

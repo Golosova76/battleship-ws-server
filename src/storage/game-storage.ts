@@ -1,13 +1,11 @@
 import type { CreateGameStateParams, GameId, GamePlayerState, GameState } from '../models/game.model.js';
 import type { PlayerInGameId } from '../models/user.model.js';
-import { generatePlayerIdGame } from '../utils/id-generator.js';
 
 const gamesStorage = new Map<GameId, GameState>();
 
 export function createGameState(params: CreateGameStateParams): GameState {
-
   const playersState: GamePlayerState[] = params.players.map((player) => ({
-    gamePlayerId: generatePlayerIdGame(),
+    gamePlayerId: player.gamePlayerId,
     userId: player.userId,
     connectionId: player.connectionId,
     ships: [],
@@ -18,7 +16,7 @@ export function createGameState(params: CreateGameStateParams): GameState {
     gameId: params.gameId,
     roomId: params.roomId,
     players: playersState,
-    currentPlayerId: params.firstPlayerId,  // ← чей ход первым (произвольно)
+    currentPlayerId: params.firstPlayerId, // ← чей ход первым (произвольно)
     isFinished: false,
     winnerPlayerId: null,
   };
@@ -56,30 +54,22 @@ export function getAllGameStates(): GameState[] {
 }
 
 // Получить ID подключений игроков из игры
-
 export function getGameRoomConnectionIds(gameId: GameId): string[] {
   const gameState = gamesStorage.get(gameId);
   if (!gameState) return [];
-  return gameState.players.map((player) => player.connectionId);
+  return gameState.players.map((player) => player.connectionId).filter((connectionId) => Boolean(connectionId));
 }
 
 // Найти игрока по Id
-export function findPlayerStateInGame(
-  gameId: GameId,
-  playerIndex: PlayerInGameId
-): GamePlayerState | undefined {
+export function findPlayerStateInGame(gameId: GameId, playerIndex: PlayerInGameId): GamePlayerState | undefined {
   const gameState = gamesStorage.get(gameId);
   if (!gameState) return undefined;
   return gameState.players.find((player) => player.gamePlayerId === playerIndex);
 }
 
 // Найти соперника
-export function findOpponentStateInGame(
-  gameId: GameId,
-  playerIndex: PlayerInGameId
-): GamePlayerState | undefined {
+export function findOpponentStateInGame(gameId: GameId, playerIndex: PlayerInGameId): GamePlayerState | undefined {
   const gameState = gamesStorage.get(gameId);
   if (!gameState) return undefined;
   return gameState.players.find((player) => player.gamePlayerId !== playerIndex);
 }
-

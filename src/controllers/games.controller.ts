@@ -7,11 +7,13 @@ import type {
 } from '../models/game.model.js';
 import type { GamesService } from '../services/games-service.js';
 import type { ConnectionContext } from '../models/websocket.model.js';
-import { MESSAGE_TYPES, type MessageBase, type MessageType } from '../models/types.js';
-import { logCommandResultOk, logError } from '../utils/logging.js';
-import { sendRoomMessage } from '../protocol/messageSender.js';
-import { getGameRoomConnectionIds } from '../storage/game-storage.js';
+import { MESSAGE_TYPES, type MessageBase, type MessageType, type UpdateWinnersResponseData } from '../models/types.js';
+import { logCommandResultError, logCommandResultOk, logError, logInfo } from '../utils/logging.js';
+import { sendBroadcastMessage, sendRoomMessage } from '../protocol/messageSender.js';
+import { getGameRoomConnectionIds, requireGameState } from '../storage/game-storage.js';
+import { getAllUsers } from '../storage/player-storage.js';
 
+const BOT_MOVE_DELAY_MS = 4000;
 
 export class GamesController implements GamesControllerType {
   private readonly gamesService: GamesService;
@@ -20,21 +22,19 @@ export class GamesController implements GamesControllerType {
     this.gamesService = gamesService;
   }
 
-  public handleGameMessage(connectionContext: ConnectionContext, clientMessage: MessageBase<MessageType, unknown>): void {
+  public handleGameMessage(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<MessageType, unknown>
+  ): void {
+    logInfo(`[GamesController] handleGameMessage type="${clientMessage.type}" for ${connectionContext.connectionId}`);
     switch (clientMessage.type) {
       case MESSAGE_TYPES.ADD_SHIPS: {
-        this.handleAddShips(
-          connectionContext,
-          clientMessage as MessageBase<typeof MESSAGE_TYPES.ADD_SHIPS, unknown>
-        );
+        this.handleAddShips(connectionContext, clientMessage as MessageBase<typeof MESSAGE_TYPES.ADD_SHIPS, unknown>);
         break;
       }
 
       case MESSAGE_TYPES.ATTACK: {
-        this.handleAttack(
-          connectionContext,
-          clientMessage as MessageBase<typeof MESSAGE_TYPES.ATTACK, unknown>
-        );
+        this.handleAttack(connectionContext, clientMessage as MessageBase<typeof MESSAGE_TYPES.ATTACK, unknown>);
         break;
       }
 
@@ -46,9 +46,15 @@ export class GamesController implements GamesControllerType {
         break;
       }
 
+      case MESSAGE_TYPES.SINGLE_PLAY: {
+        this.handleSinglePlay(
+          connectionContext,
+          clientMessage as MessageBase<typeof MESSAGE_TYPES.SINGLE_PLAY, unknown>
+        );
+        break;
+      }
+
       default: {
-        // остальные игровые типы (start_game, turn, finish, create_game, single_play)
-        // — это ответы сервера, а не команды клиента
         break;
       }
     }
@@ -56,7 +62,10 @@ export class GamesController implements GamesControllerType {
 
   // ---------- ADD_SHIPS ----------
 
-  private handleAddShips(connectionContext: ConnectionContext, clientMessage: MessageBase<typeof MESSAGE_TYPES.ADD_SHIPS, unknown>): void {
+  private handleAddShips(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<typeof MESSAGE_TYPES.ADD_SHIPS, unknown>
+  ): void {
     const shipsRequestData = this.parseShipsRequestData(clientMessage.data);
 
     if (!shipsRequestData) {
@@ -76,7 +85,6 @@ export class GamesController implements GamesControllerType {
       });
       return;
     }
-
 
     // start_game — каждому игроку персонально
     for (const startGameMessage of placementResult.startGameForPlayers) {
@@ -110,7 +118,10 @@ export class GamesController implements GamesControllerType {
 
   // ---------- ATTACK ----------
 
-  private handleAttack(connectionContext: ConnectionContext, clientMessage: MessageBase<typeof MESSAGE_TYPES.ATTACK, unknown>): void {
+  private handleAttack(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<typeof MESSAGE_TYPES.ATTACK, unknown>
+  ): void {
     const attackRequestData = this.parseAttackShipsRequestData(clientMessage.data);
 
     if (!attackRequestData) {
@@ -180,6 +191,47 @@ export class GamesController implements GamesControllerType {
       };
 
       sendRoomMessage(attackResult.targetConnectionIds, finishResponse);
+
+      const allUsers = getAllUsers();
+
+      const winnersTable: UpdateWinnersResponseData = allUsers
+        .map((user) => ({
+          name: user.name,
+          wins: user.totalWins,
+        }))
+        .sort((firstWinner, secondWinner) => secondWinner.wins - firstWinner.wins);
+
+      const winnersTableJson: string = JSON.stringify(winnersTable);
+
+      const updateWinnersMessage: MessageBase<typeof MESSAGE_TYPES.UPDATE_WINNERS, string> = {
+        type: MESSAGE_TYPES.UPDATE_WINNERS,
+        data: winnersTableJson,
+        id: 0,
+      };
+
+      sendBroadcastMessage(updateWinnersMessage);
+    }
+
+    if (!attackResult.finishResponseData) {
+      const nextPlayerId = attackResult.turnResponseData.currentPlayer;
+
+      const gameState = requireGameState(attackResult.gameId);
+      const nextPlayerState = gameState.players.find((playerState) => playerState.gamePlayerId === nextPlayerId);
+
+      if (nextPlayerState && nextPlayerState.connectionId === '') {
+        const botRandomAttackMessage: MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, string> = {
+          type: MESSAGE_TYPES.RANDOM_ATTACK,
+          data: JSON.stringify({
+            gameId: attackResult.gameId,
+            indexPlayer: nextPlayerId,
+          }),
+          id: 0,
+        };
+
+        setTimeout(() => {
+          this.handleBotAttack(connectionContext, botRandomAttackMessage);
+        }, BOT_MOVE_DELAY_MS);
+      }
     }
 
     // лог результата команды
@@ -188,7 +240,10 @@ export class GamesController implements GamesControllerType {
 
   // ---------- RANDOM_ATTACK ----------
 
-  private handleRandomAttack(connectionContext: ConnectionContext, clientMessage: MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, unknown>): void {
+  private handleRandomAttack(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, unknown>
+  ): void {
     const randomAttackRequestData = this.parseRandomAttackRequestData(clientMessage.data);
 
     if (!randomAttackRequestData) {
@@ -254,9 +309,193 @@ export class GamesController implements GamesControllerType {
       };
 
       sendRoomMessage(attackResult.targetConnectionIds, finishResponse);
+
+      const allUsers = getAllUsers();
+
+      const winnersTable: UpdateWinnersResponseData = allUsers
+        .map((user) => ({
+          name: user.name,
+          wins: user.totalWins,
+        }))
+        .sort((firstWinner, secondWinner) => secondWinner.wins - firstWinner.wins);
+
+      const winnersTableJson: string = JSON.stringify(winnersTable);
+
+      const updateWinnersMessage: MessageBase<typeof MESSAGE_TYPES.UPDATE_WINNERS, string> = {
+        type: MESSAGE_TYPES.UPDATE_WINNERS,
+        data: winnersTableJson,
+        id: 0,
+      };
+
+      sendBroadcastMessage(updateWinnersMessage);
     }
 
     // лог результата команды
+    logCommandResultOk(connectionContext.connectionId, clientMessage.type, attackResult);
+  }
+
+  // ---------- BOT_ATTACK ----------
+
+  private handleSinglePlay(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<typeof MESSAGE_TYPES.SINGLE_PLAY, unknown>
+  ): void {
+    logInfo(`[GamesController] handleSinglePlay for ${connectionContext.connectionId}`);
+    try {
+      const userId = this.getUserIndexFromConnectionContext(connectionContext);
+      logInfo(`[GamesController] single_play userId resolved: ${String(userId)}`);
+      if (!userId) {
+        logError(`Single play requested from connection ${connectionContext.connectionId}, but user not found`);
+        return;
+      }
+
+      logInfo('[GamesController] single_play before createSinglePlayGame');
+
+      const singlePlayCreationResult = this.gamesService.createSinglePlayGame({
+        userId,
+        connectionId: connectionContext.connectionId,
+      });
+
+      logInfo('[GamesController] single_play after createSinglePlayGame');
+
+      const gameState = singlePlayCreationResult.gameState;
+      const humanPlayerId = singlePlayCreationResult.humanPlayerId;
+
+      // -------- create_game --------
+      const createGameResponseData = {
+        idGame: gameState.gameId,
+        idPlayer: humanPlayerId,
+      };
+
+      const createGameResponseMessage: MessageBase<typeof MESSAGE_TYPES.CREATE_GAME, string> = {
+        type: MESSAGE_TYPES.CREATE_GAME,
+        data: JSON.stringify(createGameResponseData),
+        id: clientMessage.id ?? 0,
+      };
+
+      const responseTargetConnectionIds = getGameRoomConnectionIds(gameState.gameId);
+      logInfo(
+        `[GamesController] single_play connectionIds for game ${gameState.gameId}: ` +
+          JSON.stringify(responseTargetConnectionIds)
+      );
+      sendRoomMessage(responseTargetConnectionIds, createGameResponseMessage);
+
+      logCommandResultOk(connectionContext.connectionId, clientMessage.type, {
+        gameId: gameState.gameId,
+        humanPlayerId,
+      });
+    } catch (error) {
+      logCommandResultError(connectionContext.connectionId, clientMessage.type, String(error));
+    }
+  }
+
+  private handleBotAttack(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, unknown>
+  ): void {
+    const randomAttackRequestData = this.parseRandomAttackRequestData(clientMessage.data);
+
+    if (!randomAttackRequestData) {
+      logError(`Invalid data for randomAttack from connection ${connectionContext.connectionId}`);
+      return;
+    }
+
+    const attackResult = this.gamesService.processBotAttack(randomAttackRequestData.gameId);
+
+    // основной выстрел
+    const attackResponseDataJson: string = JSON.stringify(attackResult.attackResponseData);
+
+    const attackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, string> = {
+      type: MESSAGE_TYPES.ATTACK,
+      data: attackResponseDataJson,
+      id: clientMessage.id ?? 0,
+    };
+
+    sendRoomMessage(attackResult.targetConnectionIds, attackResponse);
+
+    // дополнительные miss вокруг убитого корабля
+    if (attackResult.additionalMissCells.length > 0) {
+      for (const additionalPosition of attackResult.additionalMissCells) {
+        const additionalAttackData: AttackResponseData = {
+          position: additionalPosition,
+          currentPlayer: randomAttackRequestData.indexPlayer,
+          status: 'miss',
+        };
+
+        const additionalAttackDataJson: string = JSON.stringify(additionalAttackData);
+
+        const additionalAttackResponse: MessageBase<typeof MESSAGE_TYPES.ATTACK, string> = {
+          type: MESSAGE_TYPES.ATTACK,
+          data: additionalAttackDataJson,
+          id: clientMessage.id ?? 0,
+        };
+
+        sendRoomMessage(attackResult.targetConnectionIds, additionalAttackResponse);
+      }
+    }
+
+    // ход
+    const turnResponseDataJson: string = JSON.stringify(attackResult.turnResponseData);
+
+    const turnResponse: MessageBase<typeof MESSAGE_TYPES.TURN, string> = {
+      type: MESSAGE_TYPES.TURN,
+      data: turnResponseDataJson,
+      id: clientMessage.id ?? 0,
+    };
+
+    sendRoomMessage(attackResult.targetConnectionIds, turnResponse);
+
+    // завершение игры
+    if (attackResult.finishResponseData) {
+      const finishResponseDataJson: string = JSON.stringify(attackResult.finishResponseData);
+
+      const finishResponse: MessageBase<typeof MESSAGE_TYPES.FINISH, string> = {
+        type: MESSAGE_TYPES.FINISH,
+        data: finishResponseDataJson,
+        id: clientMessage.id ?? 0,
+      };
+
+      sendRoomMessage(attackResult.targetConnectionIds, finishResponse);
+
+      const allUsers = getAllUsers();
+
+      const winnersTable: UpdateWinnersResponseData = allUsers
+        .map((user) => ({
+          name: user.name,
+          wins: user.totalWins,
+        }))
+        .sort((firstWinner, secondWinner) => secondWinner.wins - firstWinner.wins);
+
+      const winnersTableJson: string = JSON.stringify(winnersTable);
+
+      const updateWinnersMessage: MessageBase<typeof MESSAGE_TYPES.UPDATE_WINNERS, string> = {
+        type: MESSAGE_TYPES.UPDATE_WINNERS,
+        data: winnersTableJson,
+        id: 0,
+      };
+
+      sendBroadcastMessage(updateWinnersMessage);
+
+      logCommandResultOk(connectionContext.connectionId, clientMessage.type, attackResult);
+      return;
+    }
+
+    // если после выстрела всё ещё ход бота — делаем ещё один ход бота
+    if (attackResult.turnResponseData.currentPlayer === randomAttackRequestData.indexPlayer) {
+      const nextBotRandomAttackMessage: MessageBase<typeof MESSAGE_TYPES.RANDOM_ATTACK, string> = {
+        type: MESSAGE_TYPES.RANDOM_ATTACK,
+        data: JSON.stringify({
+          gameId: attackResult.gameId,
+          indexPlayer: randomAttackRequestData.indexPlayer,
+        }),
+        id: 0,
+      };
+
+      setTimeout(() => {
+        this.handleBotAttack(connectionContext, nextBotRandomAttackMessage);
+      }, BOT_MOVE_DELAY_MS);
+    }
+
     logCommandResultOk(connectionContext.connectionId, clientMessage.type, attackResult);
   }
 
@@ -368,6 +607,15 @@ export class GamesController implements GamesControllerType {
       };
     }
 
+    return null;
+  }
+
+  private getUserIndexFromConnectionContext(connectionContext: ConnectionContext): string | number | null {
+    if (typeof connectionContext.userIndex === 'string' || typeof connectionContext.userIndex === 'number') {
+      return connectionContext.userIndex;
+    }
+
+    logError(`Cannot extract userIndex from ConnectionContext for connection ${connectionContext.connectionId}`);
     return null;
   }
 }

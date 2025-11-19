@@ -16,9 +16,11 @@ import {
 import { logError } from '../utils/logging.js';
 
 export class RoomsService {
-
   // Создать комнату для пользователя
-  public createRoomForUser(roomOwnerUser: RoomUsers, ownerConnectionId: string): {
+  public createRoomForUser(
+    roomOwnerUser: RoomUsers,
+    ownerConnectionId: string
+  ): {
     createdRoomState: SingleRoomState;
     roomsForBroadcast: UserToRoomOneResponseData;
   } {
@@ -35,7 +37,11 @@ export class RoomsService {
   }
 
   // Добавить второго игрока в комнату
-  public addUserToRoom(requestData: UserToRoomRequestData, newRoomUser: RoomUsers, newUserConnectionId: string): AddUserToRoomServiceResult {
+  public addUserToRoom(
+    requestData: UserToRoomRequestData,
+    newRoomUser: RoomUsers,
+    newUserConnectionId: string
+  ): AddUserToRoomServiceResult {
     const roomId = requestData.indexRoom;
     const existingRoomState = getRoomFromStorage(roomId);
 
