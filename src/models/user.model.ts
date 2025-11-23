@@ -27,5 +27,5 @@ export interface PlayersControllerType {
     clientMessage: MessageBase<MessageType, unknown>
   ): Promise<void> | void;
 }
- // Players //
+
 export type PlayerInGameId = string | number;

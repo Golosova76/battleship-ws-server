@@ -1,7 +1,16 @@
 import { environment } from '../config/environment.js';
-import type { AttackLogicResult, BoardCell, GamePlayerState, GameState, Position, Ship } from '../models/game.model.js';
+import type {
+  AttackLogicResult,
+  BoardCell,
+  GamePlayerState,
+  GameState,
+  Position,
+  Ship,
+  ShipType,
+} from '../models/game.model.js';
 import type { AttackStatus } from '../models/types.js';
-
+import { getRandomIntegerInclusive } from '../utils/random-helpers.js';
+import { logError } from '../utils/logging.js';
 
 function validateAttackCoordinates(x: number, y: number): void {
   if (x < 0 || x >= environment.boardSize || y < 0 || y >= environment.boardSize) {
@@ -34,20 +43,13 @@ export function getCellsAroundShip(ship: Ship): Position[] {
         const neighborY = cell.y + dy;
 
         const isInsideBoard =
-          neighborX >= 0 &&
-          neighborX < environment.boardSize &&
-          neighborY >= 0 &&
-          neighborY < environment.boardSize;
+          neighborX >= 0 && neighborX < environment.boardSize && neighborY >= 0 && neighborY < environment.boardSize;
 
         if (!isInsideBoard) {
           continue;
         }
 
-        const isShipCell = shipCells.some(
-          (shipCell) =>
-            shipCell.x === neighborX &&
-            shipCell.y === neighborY
-        );
+        const isShipCell = shipCells.some((shipCell) => shipCell.x === neighborX && shipCell.y === neighborY);
 
         if (isShipCell) {
           continue;
@@ -74,9 +76,7 @@ function ensurePlayerBoard(player: GamePlayerState): void {
 }
 
 function getPlayerState(gameState: GameState, playerIndex: string | number): GamePlayerState {
-  const player = gameState.players.find(
-    (playerState) => playerState.gamePlayerId === playerIndex
-  );
+  const player = gameState.players.find((playerState) => playerState.gamePlayerId === playerIndex);
 
   if (!player) {
     throw new Error('Player not found');
@@ -88,9 +88,7 @@ function getPlayerState(gameState: GameState, playerIndex: string | number): Gam
 }
 
 function getOpponentState(gameState: GameState, attackerIndex: string | number): GamePlayerState {
-  const opponent = gameState.players.find(
-    (playerState) => playerState.gamePlayerId !== attackerIndex
-  );
+  const opponent = gameState.players.find((playerState) => playerState.gamePlayerId !== attackerIndex);
 
   if (!opponent) {
     throw new Error('Opponent not found');
@@ -105,21 +103,13 @@ function hasCellBeenAttacked(player: GamePlayerState, x: number, y: number): boo
     return false;
   }
 
-  return player.board.cells.some(
-    (cell) => cell.x === x && cell.y === y
-  );
+  return player.board.cells.some((cell) => cell.x === x && cell.y === y);
 }
 
 // ===== ЛОГИКА АТАКИ И КОРАБЛЕЙ =====
 
 function findHitShip(ships: Ship[], x: number, y: number): Ship | null {
-  return (
-    ships.find((ship) =>
-      getShipCells(ship).some(
-        (cell) => cell.x === x && cell.y === y
-      )
-    ) || null
-  );
+  return ships.find((ship) => getShipCells(ship).some((cell) => cell.x === x && cell.y === y)) || null;
 }
 
 function isShipKilled(attacker: GamePlayerState, ship: Ship): boolean {
@@ -146,9 +136,7 @@ function markShipAsKilled(attacker: GamePlayerState, ship: Ship): void {
 
   const shipCells = getShipCells(ship);
   const boardCells = attacker.board.cells;
-  const cellMap = new Map<string, BoardCell>(
-    boardCells.map((cell) => [`${cell.x},${cell.y}`, cell])
-  );
+  const cellMap = new Map<string, BoardCell>(boardCells.map((cell) => [`${cell.x},${cell.y}`, cell]));
 
   for (const shipCell of shipCells) {
     const key = `${shipCell.x},${shipCell.y}`;
@@ -242,4 +230,129 @@ export function applyAttackToGameState(params: {
     ...attackResult,
     isGameOver,
   };
+}
+
+export function generateBotShipsForSinglePlay(): Ship[] {
+  const boardSize = environment.boardSize;
+
+  const shipLengths: number[] = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
+
+  const shipTypeByLength: Record<number, ShipType> = {
+    1: 'small',
+    2: 'medium',
+    3: 'large',
+    4: 'huge',
+  };
+
+  const maximumAttempts = 200;
+
+  for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
+    const ships: Ship[] = [];
+
+    const occupiedCells = new Set<string>();
+    const blockedCells = new Set<string>();
+
+    const encodePosition = (position: Position): string => `${position.x}:${position.y}`;
+
+    const isCellBusy = (x: number, y: number): boolean => {
+      const cellKey = `${x}:${y}`;
+      return occupiedCells.has(cellKey) || blockedCells.has(cellKey);
+    };
+
+    const markShipOnBoard = (ship: Ship): void => {
+      const shipCells: Position[] = getShipCells(ship);
+      for (const cell of shipCells) {
+        occupiedCells.add(encodePosition(cell));
+      }
+
+      const cellsAroundShip: Position[] = getCellsAroundShip(ship);
+      for (const cell of cellsAroundShip) {
+        if (cell.x < 0 || cell.x >= boardSize || cell.y < 0 || cell.y >= boardSize) {
+          continue;
+        }
+        blockedCells.add(encodePosition(cell));
+      }
+    };
+
+    let generationFailed = false;
+
+    for (const shipLength of shipLengths) {
+      const shipType = shipTypeByLength[shipLength];
+      const possibleShips: Ship[] = [];
+
+      const orientations: boolean[] = [true, false]; // true = вертикальный, false = горизонтальный
+
+      for (const isVerticalDirection of orientations) {
+        const maximumX = isVerticalDirection ? boardSize - 1 : boardSize - shipLength;
+        const maximumY = isVerticalDirection ? boardSize - shipLength : boardSize - 1;
+
+        for (let startX = 0; startX <= maximumX; startX += 1) {
+          for (let startY = 0; startY <= maximumY; startY += 1) {
+            const candidateShip: Ship = {
+              length: shipLength,
+              direction: isVerticalDirection,
+              position: { x: startX, y: startY },
+              type: shipType,
+            };
+
+            const candidateCells: Position[] = getShipCells(candidateShip);
+
+            let hasConflict = false;
+
+            // 1. Проверяем клетки самого корабля
+            for (const cell of candidateCells) {
+              if (cell.x < 0 || cell.x >= boardSize || cell.y < 0 || cell.y >= boardSize) {
+                hasConflict = true;
+                break;
+              }
+              if (isCellBusy(cell.x, cell.y)) {
+                hasConflict = true;
+                break;
+              }
+            }
+
+            if (hasConflict) {
+              continue;
+            }
+
+            // 2. Проверяем клетки вокруг корабля
+            const candidateAround: Position[] = getCellsAroundShip(candidateShip);
+            for (const position of candidateAround) {
+              if (position.x < 0 || position.x >= boardSize || position.y < 0 || position.y >= boardSize) {
+                continue;
+              }
+              if (isCellBusy(position.x, position.y)) {
+                hasConflict = true;
+                break;
+              }
+            }
+
+            if (hasConflict) {
+              continue;
+            }
+
+            possibleShips.push(candidateShip);
+          }
+        }
+      }
+
+      if (possibleShips.length === 0) {
+        generationFailed = true;
+        break;
+      }
+
+      const randomIndex = getRandomIntegerInclusive(0, possibleShips.length - 1);
+      const chosenShip = possibleShips[randomIndex];
+
+      ships.push(chosenShip);
+      markShipOnBoard(chosenShip);
+    }
+
+    if (!generationFailed) {
+      return ships;
+    }
+  }
+
+  logError(`[BotShips] Failed to generate bot ships after ${maximumAttempts} attempts on boardSize=${boardSize}`);
+  throw new Error('Failed to generate bot ships: no possible placement for some ship.');
 }

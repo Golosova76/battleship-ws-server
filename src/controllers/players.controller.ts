@@ -8,7 +8,6 @@ import type { PlayersService } from '../services/players-service.js';
 import type { PersonalResponseMessage } from '../protocol/messageTypes.js';
 import { sendPersonalMessage } from '../protocol/messageSender.js';
 
-
 export class PlayersController implements PlayersControllerType {
   private readonly playersService: PlayersService;
 

@@ -74,6 +74,9 @@ export interface FinishResponseData {
   winPlayer: PlayerInGameId; // id игрока в тек.игр.сессии
 }
 
+// 'single_play'
+export type SinglePlayRequestData = unknown;
+
 export interface GamesControllerType {
   handleGameMessage(
     connectionContext: ConnectionContext,
@@ -121,7 +124,6 @@ export interface AttackLogicResult {
   killedShipAroundCells: Position[];
 }
 
-
 export interface AttackProcessingResult {
   gameId: GameId;
   targetConnectionIds: string[];
@@ -156,4 +158,15 @@ export interface CreateGameForRoomParams {
     connectionId: string;
   }[];
   firstPlayerId: PlayerInGameId;
+}
+
+export interface CreateSinglePlayGameParams {
+  userId: string | number; // глобальный id из reg.index
+  connectionId: string; // connectionId человека
+}
+
+export interface SinglePlayGameCreationResult {
+  gameState: GameState;
+  humanPlayerId: string | number; // idPlayer человека в этой игре
+  botPlayerId: string | number; // idPlayer бота в этой игре
 }

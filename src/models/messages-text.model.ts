@@ -22,7 +22,8 @@ export const LOG_SYSTEM = {
 } as const;
 
 export const LOG_COMMAND = {
-  INCOMING: (connectionId: string, commandType: string, rawJson: string) => `IN [${connectionId}] ${commandType}: ${rawJson}`,
+  INCOMING: (connectionId: string, commandType: string, rawJson: string) =>
+    `IN [${connectionId}] ${commandType}: ${rawJson}`,
   INCOMING_INVALID_JSON: (connectionId: string, rawPayload: string) =>
     `IN [${connectionId}] invalid JSON: ${rawPayload}`,
   RESULT_OK: (targetId: string, commandType: string, compactResultJson: string) =>

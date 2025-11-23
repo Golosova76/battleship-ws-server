@@ -23,7 +23,10 @@ export class RoomsController implements RoomsControllerType {
     this.gamesService = gamesService;
   }
 
-  public handleRoomMessage(connectionContext: ConnectionContext, clientMessage: MessageBase<MessageType, unknown>): void {
+  public handleRoomMessage(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<MessageType, unknown>
+  ): void {
     switch (clientMessage.type) {
       case MESSAGE_TYPES.CREATE_ROOM: {
         this.handleCreateRoom(
@@ -50,7 +53,10 @@ export class RoomsController implements RoomsControllerType {
 
   // --------- приватные хендлеры ---------
 
-  private handleCreateRoom(connectionContext: ConnectionContext, clientMessage: MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, unknown>): void {
+  private handleCreateRoom(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<typeof MESSAGE_TYPES.CREATE_ROOM, unknown>
+  ): void {
     const roomUser = this.extractRoomUserFromConnectionContext(connectionContext);
     if (!roomUser) {
       return;
@@ -71,7 +77,10 @@ export class RoomsController implements RoomsControllerType {
     sendBroadcastMessage(updateRoomResponseMessage);
   }
 
-  private handleAddUserToRoom(connectionContext: ConnectionContext, clientMessage: MessageBase<typeof MESSAGE_TYPES.ADD_USER_TO_ROOM, unknown>): void {
+  private handleAddUserToRoom(
+    connectionContext: ConnectionContext,
+    clientMessage: MessageBase<typeof MESSAGE_TYPES.ADD_USER_TO_ROOM, unknown>
+  ): void {
     const roomUser = this.extractRoomUserFromConnectionContext(connectionContext);
     if (!roomUser) {
       return;
@@ -98,7 +107,6 @@ export class RoomsController implements RoomsControllerType {
     // Ответ для всех (response for all)
     sendBroadcastMessage(updateRoomResponseMessage);
 
-
     // 2. Если targetRoomState пустой — игры не создаём
     if (!serviceResult.targetRoomState) {
       return;
@@ -111,9 +119,7 @@ export class RoomsController implements RoomsControllerType {
     const playersCreationData: GamePlayerCreationData[] = roomState.roomUsers.map((roomUser, index) => {
       const connectionId = roomState.connections[index];
       if (!connectionId) {
-        logError(
-          `Missing connectionId for room "${String(roomState.roomId)}" at position ${index}`
-        );
+        logError(`Missing connectionId for room "${String(roomState.roomId)}" at position ${index}`);
       }
 
       const creationData: GamePlayerCreationData = {

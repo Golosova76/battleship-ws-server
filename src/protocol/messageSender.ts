@@ -45,12 +45,20 @@ export function sendPersonalMessage(
 }
 
 export function sendRoomMessage(responseTargetConnectionIds: string[], responseMessage: RoomResponseMessage): void {
-  if (responseTargetConnectionIds.length === 0) {
+  const validTargetConnectionIds: string[] = Array.from(
+    new Set(
+      responseTargetConnectionIds.filter((connectionId) => {
+        return Boolean(connectionId && connectionId.trim());
+      })
+    )
+  );
+
+  if (validTargetConnectionIds.length === 0) {
     return;
   }
 
   const responseMessagePackage: ResponseMessagePackage = {
-    targetConnectionIds: responseTargetConnectionIds,
+    targetConnectionIds: validTargetConnectionIds, // ← используем ОЧИЩЕННЫЙ массив
     responseMessage,
   };
 

@@ -7,19 +7,15 @@ export function getRandomIntegerInclusive(minValue: number, maxValue: number): n
   return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
 }
 
-/**
- * Выбрать случайную клетку, в которую ещё не стреляли.
- * Возвращает null, если свободных клеток не осталось.
- */
+//Выбрать случайную клетку, в которую ещё не стреляли.
+// Возвращает null, если свободных клеток не осталось.
 export function getRandomFreeAttackPosition(params: {
   existingBoardCells: BoardCell[];
   boardSize?: number;
 }): Position | null {
   const boardSize = params.boardSize ?? environment.boardSize;
 
-  const attackedCellsKeys = new Set(
-    params.existingBoardCells.map((cell) => `${cell.x},${cell.y}`)
-  );
+  const attackedCellsKeys = new Set(params.existingBoardCells.map((cell) => `${cell.x},${cell.y}`));
 
   const allFreePositions: Position[] = [];
 

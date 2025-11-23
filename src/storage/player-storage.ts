@@ -13,3 +13,16 @@ export function saveUser(user: User): void {
 export function getAllUsers(): User[] {
   return Array.from(usersByName.values());
 }
+
+export function incrementUserWinsByUserId(userId: string | number): void {
+  const allUsers = getAllUsers();
+
+  const targetUser = allUsers.find((currentUser) => currentUser.index === userId);
+
+  if (!targetUser) {
+    return;
+  }
+
+  targetUser.totalWins += 1;
+  saveUser(targetUser);
+}
