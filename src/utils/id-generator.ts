@@ -1,7 +1,5 @@
-import { v4 as uuid } from 'uuid';
-
 export function generateId(prefix: string): string {
-  return `${prefix}_${uuid()}`;
+  return `${prefix}_${crypto.randomUUID()}`;
 }
 
 export const generateConnectionId = (): string => generateId('connection'); // при установлении WebSocket
